@@ -15,10 +15,10 @@ app.use(express.json());
 
 // ================= ✅ ALLOWED FRONTEND URL =====================
 const allowedOrigins = [
-  "https://saferoute-c4wm.onrender.com",  // ✅ your frontend URL
+  "https://saferoute-c4wm.onrender.com",
+  "http://localhost:5173",
 ];
 
-// ================= ✅ CORS =====================
 app.use(
   cors({
     origin: (origin, callback) => {
@@ -31,6 +31,7 @@ app.use(
     credentials: true,
   })
 );
+
 
 // ❌ REMOVE THIS (CAUSES ERROR)
 // app.options("*", cors());
