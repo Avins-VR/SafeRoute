@@ -29,11 +29,12 @@ export default function App() {
     setShowResult(false);
 
     try {
-      const API = process.env.REACT_APP_API_URL;
+      const API = import.meta.env.VITE_API_URL;
 
 const res = await fetch(
   `${API}/api/safety?query=${encodeURIComponent(search)}`
 );
+
 
       const data = await res.json();
 
