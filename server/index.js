@@ -15,7 +15,7 @@ app.use(express.json());
 
 // ================= ✅ ALLOWED FRONTEND URL =====================
 const allowedOrigins = [
-  "https://saferoute-c4wm.onrender.com",
+  "https://saferoute-blze.onrender.com",
   "http://localhost:5173",
 ];
 
