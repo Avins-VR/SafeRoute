@@ -168,7 +168,7 @@ app.post("/send-message", async (req, res) => {
 });
 
 // ================= ✅ 404 Handler =====================
-app.all("*", (req, res) => res.status(404).json({ error: "Route not found ❌" }));
+app.all("/*", (req, res) => res.status(404).json({ error: "Route not found ❌" }));
 
 // ================= ✅ SERVER =====================
 const PORT = process.env.PORT || 5000;
