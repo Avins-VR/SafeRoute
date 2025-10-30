@@ -13,57 +13,75 @@ const safetyRoute = require("./routes/safetyRoute");
 const app = express();
 app.use(express.json());
 
-// ================= ✅ CORS Config =====================
+// ================= ✅ ALLOWED FRONTEND URL =====================
+const allowedOrigins = [
+  "https://saferoute-c4wm.onrender.com",  // ✅ your frontend URL
+];
+
+// ================= ✅ CORS =====================
 app.use(
   cors({
-    origin: ["https://saferoute-c4wm.onrender.com"], // ✅ Frontend URL
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
     credentials: true,
   })
 );
 
-// ✅ Preflight request (VERY IMPORTANT)
-app.options("*", cors());
+// ❌ REMOVE THIS (CAUSES ERROR)
+// app.options("*", cors());
+
+// ✅ FIX: Allow all preflight OPTIONS safely
+app.options("*", (req, res) => {
+  res.header("Access-Control-Allow-Origin", allowedOrigins[0]);
+  res.header("Access-Control-Allow-Credentials", "true");
+  res.sendStatus(200);
+});
+
 app.set("trust proxy", 1);
 
-// ================= ✅ Session Cookies =====================
+// ================= ✅ SESSION =====================
 app.use(
   session({
     secret: process.env.SESSION_SECRET || "defaultsecret",
     resave: false,
     saveUninitialized: false,
     cookie: {
-      secure: process.env.NODE_ENV === "production",
+      secure: true,
       httpOnly: true,
-      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+      sameSite: "none",
     },
   })
 );
 
-// ================= ✅ Passport Init =====================
+// ================= ✅ PASSPORT =====================
 app.use(passport.initialize());
 app.use(passport.session());
 initializePassport(passport);
 
-// ================= ✅ MongoDB Connection =====================
-mongoose.connect(process.env.MONGO_URI, {})
+// ================= ✅ MONGODB =====================
+mongoose
+  .connect(process.env.MONGO_URI)
   .then(() => console.log("✅ MongoDB Connected"))
-  .catch((err) => console.error("❌ MongoDB connection error:", err));
+  .catch((err) => console.error("❌ MongoDB error:", err));
 
-
-// ================= ✅ Load Safety CSV =====================
+// ================= ✅ Load CSV =====================
 try {
-  require("./loadSafetyData"); 
+  require("./loadSafetyData");
 } catch (err) {
-  console.log("⚠️ CSV loader file not found. Skipping...");
+  console.log("⚠️ CSV loader missing. Skipping...");
 }
 
-// ================= ✅ Routes =====================
-app.get("/", (req, res) => res.send("Server running ✅"));
+// ================= ✅ ROUTES =====================
+app.get("/", (req, res) => res.send("✅ Backend Running"));
+
 app.use("/api/safety", safetyRoute);
 
-// ========== ✅ Signup ==========
+// ================= ✅ SIGNUP =====================
 app.post("/signup", async (req, res) => {
   try {
     const { fullName, email, password } = req.body;
@@ -71,105 +89,87 @@ app.post("/signup", async (req, res) => {
     if (!fullName || !email || !password)
       return res.status(400).json({ message: "All fields required" });
 
-    const existingUser = await User.findOne({ email });
-    if (existingUser)
-      return res.status(400).json({ message: "User already exists" });
+    const exist = await User.findOne({ email });
+    if (exist) return res.status(400).json({ message: "User already exists" });
 
-    const hashed = await bcrypt.hash(password, 10);
-    await User.create({ fullName, email, password: hashed });
+    const hash = await bcrypt.hash(password, 10);
+    await User.create({ fullName, email, password: hash });
 
-    res.status(201).json({ message: "Signup successful ✅" });
-  } catch (err) {
-    console.log(err);
+    res.status(201).json({ message: "Signup success ✅" });
+  } catch {
     res.status(500).json({ message: "Signup failed ❌" });
   }
 });
 
-// ========== ✅ Login ==========
+// ================= ✅ LOGIN =====================
 app.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;
-
-    if (!email || !password)
-      return res.status(400).json({ message: "All fields required" });
-
     const user = await User.findOne({ email });
-    if (!user)
-      return res.status(400).json({ message: "User not found" });
+
+    if (!user) return res.status(400).json({ message: "User not found" });
 
     const match = await bcrypt.compare(password, user.password);
-    if (!match)
-      return res.status(400).json({ message: "Invalid password" });
+    if (!match) return res.status(400).json({ message: "Wrong password" });
 
-    req.login(user, () => {
-      res.status(200).json({
-        message: "Login successful ✅",
-        user: { fullName: user.fullName, email: user.email }
-      });
-    });
-  } catch (err) {
-    console.log(err);
+    req.login(user, () =>
+      res.json({
+        message: "Login success ✅",
+        user: { fullName: user.fullName, email: user.email },
+      })
+    );
+  } catch {
     res.status(500).json({ message: "Login failed ❌" });
   }
 });
 
-// ========== ✅ Google OAuth ==========
-app.get("/auth/google", passport.authenticate("google", { scope: ["profile", "email"] }));
+// ================= ✅ GOOGLE LOGIN =====================
+app.get("/auth/google",
+  passport.authenticate("google", { scope: ["profile", "email"] })
+);
 
 app.get(
   "/auth/google/callback",
   passport.authenticate("google", {
-    failureRedirect: process.env.FRONTEND_URL + "/login",
-    session: true,
+    failureRedirect: "https://saferoute-c4wm.onrender.com/login",
   }),
   (req, res) => {
-    res.redirect(process.env.FRONTEND_URL + "/dashboard");
+    res.redirect("https://saferoute-c4wm.onrender.com/dashboard");
   }
 );
 
-// ========== ✅ Logout ==========
+// ================= ✅ LOGOUT =====================
 app.get("/logout", (req, res) => {
   req.logout(() => {
-    res.redirect(process.env.FRONTEND_URL + "/login");
+    res.redirect("https://saferoute-c4wm.onrender.com/login");
   });
 });
 
-// ========== ✅ Contact Form ==========
+// ================= ✅ CONTACT =====================
 app.post("/send-message", async (req, res) => {
   const { name, email, subject, message } = req.body;
-
-  if (!name || !email || !message)
-    return res.status(400).json({ error: "Please fill all fields" });
-
   try {
     const transporter = nodemailer.createTransport({
       service: "gmail",
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
+      auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS },
     });
 
     await transporter.sendMail({
-      from: `"SafeRoute Contact" <${process.env.EMAIL_USER}>`,
+      from: `"SafeRoute" <${process.env.EMAIL_USER}>`,
       to: process.env.EMAIL_USER,
-      subject: subject || "New Contact Message",
-      html: `<h2>📩 New Message</h2>
-             <p><b>Name:</b> ${name}</p>
-             <p><b>Email:</b> ${email}</p>
-             <p><b>Message:</b> ${message}</p>`,
+      subject: subject || "New Message",
+      html: `<b>${name}</b> (${email}) says:<br/>${message}`,
     });
 
     res.json({ success: "Message sent ✅" });
-  } catch (err) {
-    console.error("❌ Email Error:", err);
-    res.status(500).json({ error: "Failed to send email" });
+  } catch {
+    res.status(500).json({ error: "Email failed ❌" });
   }
 });
 
-// ========== ✅ 404 Handler ==========
-app.use((req, res) => res.status(404).send("Route not found ❌"));
+// ================= ✅ 404 Handler =====================
+app.all("/*", (req, res) => res.status(404).json({ error: "Route not found ❌" }));
 
-// ========== ✅ Start Server ==========
+// ================= ✅ SERVER =====================
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+app.listen(PORT, () => console.log(`🚀 Server live on ${PORT}`));
