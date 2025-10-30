@@ -29,9 +29,12 @@ export default function App() {
     setShowResult(false);
 
     try {
-      const res = await fetch(
-        `http://localhost:5000/api/safety?query=${encodeURIComponent(search)}`
-      );
+      const API = process.env.REACT_APP_API_URL;
+
+const res = await fetch(
+  `${API}/api/safety?query=${encodeURIComponent(search)}`
+);
+
       const data = await res.json();
 
       if (res.ok && data.success) {
