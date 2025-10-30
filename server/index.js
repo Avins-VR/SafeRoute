@@ -14,26 +14,18 @@ const app = express();
 app.use(express.json());
 
 // ================= ✅ CORS Config =====================
-const allowedOrigins = [
-  process.env.FRONTEND_URL,
-  process.env.FRONTEND_URL_PROD
-];
-
 app.use(
   cors({
-    origin: (origin, callback) => {
-      console.log("🌐 Request Origin:", origin);
-      console.log("✅ Allowed Origins:", allowedOrigins);
-
-      if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error("Not allowed by CORS: " + origin));
-      }
-    },
+    origin: ["https://saferoute-c4wm.onrender.com"], // ✅ Frontend URL
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true,
   })
 );
+
+// ✅ Preflight request (VERY IMPORTANT)
+app.options("*", cors());
+app.set("trust proxy", 1);
 
 // ================= ✅ Session Cookies =====================
 app.use(
@@ -55,30 +47,27 @@ app.use(passport.session());
 initializePassport(passport);
 
 // ================= ✅ MongoDB Connection =====================
-mongoose.connect(process.env.MONGO_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-})
-
+mongoose.connect(process.env.MONGO_URI, {})
   .then(() => console.log("✅ MongoDB Connected"))
   .catch((err) => console.error("❌ MongoDB connection error:", err));
 
+
 // ================= ✅ Load Safety CSV =====================
 try {
-  require("./loadSafetyData"); // file that loads your 5000 safety rows
+  require("./loadSafetyData"); 
 } catch (err) {
   console.log("⚠️ CSV loader file not found. Skipping...");
 }
 
 // ================= ✅ Routes =====================
 app.get("/", (req, res) => res.send("Server running ✅"));
-
 app.use("/api/safety", safetyRoute);
 
 // ========== ✅ Signup ==========
 app.post("/signup", async (req, res) => {
   try {
     const { fullName, email, password } = req.body;
+
     if (!fullName || !email || !password)
       return res.status(400).json({ message: "All fields required" });
 
@@ -86,12 +75,12 @@ app.post("/signup", async (req, res) => {
     if (existingUser)
       return res.status(400).json({ message: "User already exists" });
 
-    const hashedPassword = await bcrypt.hash(password, 10);
-    await User.create({ fullName, email, password: hashedPassword });
+    const hashed = await bcrypt.hash(password, 10);
+    await User.create({ fullName, email, password: hashed });
 
     res.status(201).json({ message: "Signup successful ✅" });
   } catch (err) {
-    console.error(err);
+    console.log(err);
     res.status(500).json({ message: "Signup failed ❌" });
   }
 });
@@ -100,23 +89,26 @@ app.post("/signup", async (req, res) => {
 app.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;
+
     if (!email || !password)
       return res.status(400).json({ message: "All fields required" });
 
     const user = await User.findOne({ email });
-    if (!user) return res.status(400).json({ message: "User not found" });
+    if (!user)
+      return res.status(400).json({ message: "User not found" });
 
     const match = await bcrypt.compare(password, user.password);
-    if (!match) return res.status(400).json({ message: "Invalid password" });
+    if (!match)
+      return res.status(400).json({ message: "Invalid password" });
 
     req.login(user, () => {
-      return res.status(200).json({
+      res.status(200).json({
         message: "Login successful ✅",
-        user: { fullName: user.fullName, email: user.email },
+        user: { fullName: user.fullName, email: user.email }
       });
     });
   } catch (err) {
-    console.error(err);
+    console.log(err);
     res.status(500).json({ message: "Login failed ❌" });
   }
 });
@@ -162,7 +154,10 @@ app.post("/send-message", async (req, res) => {
       from: `"SafeRoute Contact" <${process.env.EMAIL_USER}>`,
       to: process.env.EMAIL_USER,
       subject: subject || "New Contact Message",
-      html: `<h2>📩 New Message</h2><p><b>Name:</b> ${name}</p><p><b>Email:</b> ${email}</p><p><b>Message:</b> ${message}</p>`,
+      html: `<h2>📩 New Message</h2>
+             <p><b>Name:</b> ${name}</p>
+             <p><b>Email:</b> ${email}</p>
+             <p><b>Message:</b> ${message}</p>`,
     });
 
     res.json({ success: "Message sent ✅" });
