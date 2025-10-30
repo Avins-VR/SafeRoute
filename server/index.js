@@ -11,29 +11,31 @@ const User = require("./model/User");
 const safetyRoute = require("./routes/safetyRoute");
 
 const app = express();
-
-// ===== Middleware =====
 app.use(express.json());
 
-// 🟩 Dynamic CORS for local + production
+// ================= ✅ CORS Config =====================
 const allowedOrigins = [
-  "http://localhost:5173",
-  "https://safe-route-frontend.onrender.com"
+  process.env.FRONTEND_URL,
+  process.env.FRONTEND_URL_PROD
 ];
+
 app.use(
   cors({
     origin: (origin, callback) => {
+      console.log("🌐 Request Origin:", origin);
+      console.log("✅ Allowed Origins:", allowedOrigins);
+
       if (!origin || allowedOrigins.includes(origin)) {
         callback(null, true);
       } else {
-        callback(new Error("Not allowed by CORS"));
+        callback(new Error("Not allowed by CORS: " + origin));
       }
     },
     credentials: true,
   })
 );
 
-// 🟩 Secure session cookies
+// ================= ✅ Session Cookies =====================
 app.use(
   session({
     secret: process.env.SESSION_SECRET || "defaultsecret",
@@ -47,27 +49,38 @@ app.use(
   })
 );
 
-// ===== Initialize Passport =====
+// ================= ✅ Passport Init =====================
 app.use(passport.initialize());
 app.use(passport.session());
 initializePassport(passport);
 
-// ===== MongoDB Connection =====
-mongoose
-  .connect(process.env.MONGO_URI)
-  .then(() => console.log("✅ MongoDB Connected"))
-  .catch((err) => console.log("❌ MongoDB connection error:", err));
+// ================= ✅ MongoDB Connection =====================
+mongoose.connect(process.env.MONGO_URI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+})
 
-// ===== Routes =====
+  .then(() => console.log("✅ MongoDB Connected"))
+  .catch((err) => console.error("❌ MongoDB connection error:", err));
+
+// ================= ✅ Load Safety CSV =====================
+try {
+  require("./loadSafetyData"); // file that loads your 5000 safety rows
+} catch (err) {
+  console.log("⚠️ CSV loader file not found. Skipping...");
+}
+
+// ================= ✅ Routes =====================
 app.get("/", (req, res) => res.send("Server running ✅"));
+
 app.use("/api/safety", safetyRoute);
 
-// ===== Signup Route =====
+// ========== ✅ Signup ==========
 app.post("/signup", async (req, res) => {
   try {
     const { fullName, email, password } = req.body;
     if (!fullName || !email || !password)
-      return res.status(400).json({ message: "All fields are required" });
+      return res.status(400).json({ message: "All fields required" });
 
     const existingUser = await User.findOne({ email });
     if (existingUser)
@@ -76,41 +89,40 @@ app.post("/signup", async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
     await User.create({ fullName, email, password: hashedPassword });
 
-    res.status(201).json({ message: "Signup successful!" });
-  } catch (error) {
-    console.error("Signup error:", error);
-    res.status(500).json({ message: "Server error during signup" });
+    res.status(201).json({ message: "Signup successful ✅" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Signup failed ❌" });
   }
 });
 
-// ===== Login Route =====
+// ========== ✅ Login ==========
 app.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;
     if (!email || !password)
-      return res.status(400).json({ message: "All fields are required" });
+      return res.status(400).json({ message: "All fields required" });
 
     const user = await User.findOne({ email });
     if (!user) return res.status(400).json({ message: "User not found" });
 
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) return res.status(400).json({ message: "Invalid password" });
+    const match = await bcrypt.compare(password, user.password);
+    if (!match) return res.status(400).json({ message: "Invalid password" });
 
-    res.status(200).json({
-      message: "Login successful",
-      user: { fullName: user.fullName, email: user.email },
+    req.login(user, () => {
+      return res.status(200).json({
+        message: "Login successful ✅",
+        user: { fullName: user.fullName, email: user.email },
+      });
     });
-  } catch (error) {
-    console.error("Login error:", error);
-    res.status(500).json({ message: "Server error during login" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Login failed ❌" });
   }
 });
 
-// ===== Google Auth =====
-app.get(
-  "/auth/google",
-  passport.authenticate("google", { scope: ["profile", "email"] })
-);
+// ========== ✅ Google OAuth ==========
+app.get("/auth/google", passport.authenticate("google", { scope: ["profile", "email"] }));
 
 app.get(
   "/auth/google/callback",
@@ -123,18 +135,19 @@ app.get(
   }
 );
 
-// ===== Logout =====
+// ========== ✅ Logout ==========
 app.get("/logout", (req, res) => {
   req.logout(() => {
     res.redirect(process.env.FRONTEND_URL + "/login");
   });
 });
 
-// ===== Contact Form =====
+// ========== ✅ Contact Form ==========
 app.post("/send-message", async (req, res) => {
   const { name, email, subject, message } = req.body;
+
   if (!name || !email || !message)
-    return res.status(400).json({ error: "Please fill all required fields" });
+    return res.status(400).json({ error: "Please fill all fields" });
 
   try {
     const transporter = nodemailer.createTransport({
@@ -145,30 +158,23 @@ app.post("/send-message", async (req, res) => {
       },
     });
 
-    const mailOptions = {
+    await transporter.sendMail({
       from: `"SafeRoute Contact" <${process.env.EMAIL_USER}>`,
       to: process.env.EMAIL_USER,
-      subject: subject || "New Contact Message from SafeRoute",
-      html: `
-        <h2>📩 New Message from SafeRoute Contact Form</h2>
-        <p><strong>Name:</strong> ${name}</p>
-        <p><strong>Email:</strong> ${email}</p>
-        <p><strong>Subject:</strong> ${subject || "No subject"}</p>
-        <p><strong>Message:</strong><br/>${message}</p>
-      `,
-    };
+      subject: subject || "New Contact Message",
+      html: `<h2>📩 New Message</h2><p><b>Name:</b> ${name}</p><p><b>Email:</b> ${email}</p><p><b>Message:</b> ${message}</p>`,
+    });
 
-    await transporter.sendMail(mailOptions);
-    res.status(200).json({ success: "Message sent successfully!" });
-  } catch (error) {
-    console.error("❌ Error sending email:", error);
-    res.status(500).json({ error: "Failed to send message." });
+    res.json({ success: "Message sent ✅" });
+  } catch (err) {
+    console.error("❌ Email Error:", err);
+    res.status(500).json({ error: "Failed to send email" });
   }
 });
 
-// ===== Fallback Route =====
-app.use((req, res) => res.status(404).send("Route not found"));
+// ========== ✅ 404 Handler ==========
+app.use((req, res) => res.status(404).send("Route not found ❌"));
 
-// ===== Start Server =====
+// ========== ✅ Start Server ==========
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
