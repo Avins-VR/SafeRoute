@@ -17,11 +17,10 @@ export default function Login() {
     const password = e.target.password.value;
 
     try {
-      const response = await axios.post("http://localhost:5000/login", {
-        email,
-        password,
-      });
-
+      const response = await axios.post(`${import.meta.env.VITE_API_URL}/login`, {
+  email,
+  password,
+});
       alert(response.data.message);
 
       // 👉 Redirect After Login
