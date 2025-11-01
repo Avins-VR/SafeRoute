@@ -155,7 +155,7 @@ app.get("/logout", (req, res) => {
 */
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-app.post("/send-message", async (req, res) => {
+app.post("/api/send-message", async (req, res) => {
   const { name, email, subject, message } = req.body;
 
   if (!name || !email || !message)
