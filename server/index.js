@@ -149,24 +149,39 @@ app.get("/logout", (req, res) => {
 // ================= ✅ CONTACT =====================
 app.post("/send-message", async (req, res) => {
   const { name, email, subject, message } = req.body;
+
   try {
     const transporter = nodemailer.createTransport({
-      service: "gmail",
-      auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS },
+      host: "smtp.gmail.com",
+      port: 587,
+      secure: false,
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
     });
 
     await transporter.sendMail({
-      from: `"SafeRoute" <${process.env.EMAIL_USER}>`,
-      to: process.env.EMAIL_USER,
-      subject: subject || "New Message",
-      html: `<b>${name}</b> (${email}) says:<br/>${message}`,
+      from: `"SafeRoute Contact" <${process.env.EMAIL_USER}>`,
+      to: process.env.EMAIL_USER, // receive mail
+      replyTo: email,
+      subject: subject || `Message from ${name}`,
+      html: `
+        <h3>New Contact Form Message</h3>
+        <p><b>Name:</b> ${name}</p>
+        <p><b>Email:</b> ${email}</p>
+        <p><b>Subject:</b> ${subject}</p>
+        <p><b>Message:</b><br/>${message}</p>
+      `,
     });
 
-    res.json({ success: "Message sent ✅" });
-  } catch {
-    res.status(500).json({ error: "Email failed ❌" });
+    return res.json({ success: "✅ Message sent successfully" });
+  } catch (err) {
+    console.error("Email Error:", err);
+    return res.status(500).json({ error: "Email Failed ❌" });
   }
 });
+
 
 // ================= ✅ 404 Handler =====================
 app.all("/*", (req, res) => res.status(404).json({ error: "Route not found ❌" }));
