@@ -88,7 +88,7 @@ app.get("/", (req, res) => res.send("✅ Backend Running"));
 app.use("/api/safety", safetyRoute);
 
 // ================= SIGNUP =================
-app.post("/signup", async (req, res) => {
+app.post("/api/signup", async (req, res) => {
   try {
     const { fullName, email, password } = req.body;
 
@@ -119,7 +119,7 @@ app.post("/signup", async (req, res) => {
 });
 
 // ================= LOGIN =================
-app.post("/login", async (req, res) => {
+app.post("/api/login", async (req, res) => {
   try {
     const { email, password } = req.body;
 
