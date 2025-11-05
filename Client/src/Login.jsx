@@ -17,7 +17,7 @@ export default function Login() {
     const password = e.target.password.value;
 
     try {
-      const response = await axios.post(`${import.meta.env.VITE_API_URL}/login`, { email, password }, { withCredentials: true });
+      const response = await axios.post(`${import.meta.env.VITE_API_URL}/api/login`, { email, password }, { withCredentials: true });
       alert(response.data.message);
       navigate("/about");
     } catch (error) {
