@@ -6,10 +6,13 @@ const bcrypt = require("bcryptjs");
 const session = require("express-session");
 const passport = require("passport");
 const { Resend } = require("resend");
+const path = require("path");
+
 const initializePassport = require("./model/passport");
 const User = require("./model/User");
 const safetyRoute = require("./routes/safetyRoute");
 const passwordRoutes = require("./routes/passwordRoutes");
+
 const app = express();
 app.use(express.json());
 
@@ -37,10 +40,8 @@ app.options("*", (req, res) => {
   res.sendStatus(200);
 });
 
-// Trust render proxy
-app.set("trust proxy", 1);
-
 // ================= SESSION =================
+app.set("trust proxy", 1); // trust first proxy for secure cookies
 app.use(
   session({
     secret: process.env.SESSION_SECRET || "defaultsecret",
@@ -62,36 +63,26 @@ initializePassport(passport);
 // ================= MONGODB =================
 mongoose.set("strictQuery", true);
 mongoose.set("bufferCommands", false);
-
 mongoose
   .connect(process.env.MONGO_URL)
   .then(() => console.log("✅ MongoDB Connected"))
   .catch((err) => console.error("❌ MongoDB error:", err));
 
-// Load Safety Data (optional)
+// Optional: Load Safety Data
 try {
   require("./loadSafetyData");
 } catch (err) {
   console.log("⚠️ CSV loader missing. Skipping...");
 }
 
-// ✅ Password reset routes
-app.use("/api/password", passwordRoutes);
-
-// ================= PING ROUTE (Render Keep-Alive) =================
-app.get("/ping", (req, res) => res.send("pong ✔️"));
-
-// ================= ROOT =================
-app.get("/", (req, res) => res.send("✅ Backend Running"));
-
 // ================= API ROUTES =================
+app.use("/api/password", passwordRoutes);
 app.use("/api/safety", safetyRoute);
 
-// ================= SIGNUP =================
+// Signup
 app.post("/api/signup", async (req, res) => {
   try {
     const { fullName, email, password } = req.body;
-
     if (!fullName || !email || !password)
       return res.status(400).json({ message: "All fields required" });
 
@@ -100,15 +91,14 @@ app.post("/api/signup", async (req, res) => {
 
     const strongPasswordRegex =
       /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
-
     if (!strongPasswordRegex.test(password)) {
       return res.status(400).json({
         message:
-          "Weak password! Must have 8+ chars, uppercase, lowercase, number & special character"
+          "Weak password! Must have 8+ chars, uppercase, lowercase, number & special character",
       });
     }
 
-    const hash = await bcrypt.hash(password, 8); // increased rounds
+    const hash = await bcrypt.hash(password, 8);
     await User.create({ fullName, email, password: hash });
 
     res.status(201).json({ message: "Signup success ✅" });
@@ -118,55 +108,37 @@ app.post("/api/signup", async (req, res) => {
   }
 });
 
-// ================= LOGIN =================
+// Login
 app.post("/api/login", async (req, res) => {
   try {
     const { email, password } = req.body;
-
-    // Check empty input
-    if (!email || !password) {
+    if (!email || !password)
       return res.status(400).json({ message: "Email & password required" });
-    }
 
-    // Find user
     const user = await User.findOne({ email });
-    if (!user) {
-      return res.status(404).json({ message: "User not found ❌" });
-    }
+    if (!user) return res.status(404).json({ message: "User not found ❌" });
 
-    // Compare password with hashed password
     const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) {
-      return res.status(400).json({ message: "Invalid password ❌" });
-    }
+    if (!isMatch) return res.status(400).json({ message: "Invalid password ❌" });
 
-    // Login the user using session
     req.login(user, (err) => {
-      if (err) {
-        return res.status(500).json({ message: "Login error 🤯" });
-      }
-
-      return res.json({
+      if (err) return res.status(500).json({ message: "Login error 🤯" });
+      res.json({
         message: "Login successful ✅",
-        user: {
-          fullName: user.fullName,
-          email: user.email,
-        },
+        user: { fullName: user.fullName, email: user.email },
       });
     });
-
   } catch (error) {
     console.error("Login Error ➜", error);
-    return res.status(500).json({ message: "Internal Server Error ❌" });
+    res.status(500).json({ message: "Internal Server Error ❌" });
   }
 });
 
-
-// ================= GOOGLE LOGIN =================
-app.get("/auth/google",
+// Google Login
+app.get(
+  "/auth/google",
   passport.authenticate("google", { scope: ["profile", "email"] })
 );
-
 app.get(
   "/auth/google/callback",
   passport.authenticate("google", {
@@ -174,23 +146,20 @@ app.get(
   }),
   (req, res) => {
     res.redirect("https://saferoute-blze.onrender.com/dashboard");
-
   }
 );
 
-// ================= LOGOUT =================
+// Logout
 app.get("/logout", (req, res) => {
   req.logout(() => {
     res.redirect("https://saferoute-blze.onrender.com/login");
   });
 });
 
-// ================= CONTACT (Resend) =================
+// Contact (Resend)
 const resend = new Resend(process.env.RESEND_API_KEY);
-
 app.post("/api/send-message", async (req, res) => {
   const { name, email, subject, message } = req.body;
-
   if (!name || !email || !message)
     return res.status(400).json({ error: "Missing fields" });
 
@@ -200,23 +169,33 @@ app.post("/api/send-message", async (req, res) => {
       to: process.env.MY_EMAIL,
       subject: subject || `New message from ${name}`,
       html: `
-      <h3>New Contact Form Message</h3>
-      <p><b>Name:</b> ${name}</p>
-      <p><b>Email:</b> ${email}</p>
-      <p><b>Subject:</b> ${subject || "N/A"}</p>
-      <p><b>Message:</b><br/>${message.replace(/\n/g, "<br/>")}</p>
-    `,
+        <h3>New Contact Form Message</h3>
+        <p><b>Name:</b> ${name}</p>
+        <p><b>Email:</b> ${email}</p>
+        <p><b>Subject:</b> ${subject || "N/A"}</p>
+        <p><b>Message:</b><br/>${message.replace(/\n/g, "<br/>")}</p>
+      `,
       reply_to: email,
     });
-    return res.json({ success: "Message sent ✅" });
+    res.json({ success: "Message sent ✅" });
   } catch (err) {
     console.error("Resend Error:", err);
-    return res.status(500).json({ error: "Email failed ❌" });
+    res.status(500).json({ error: "Email failed ❌" });
   }
 });
 
-// ================= 404 Handler =================
-app.all("/*", (req, res) => res.status(404).json({ error: "Route not found ❌" }));
+// ================= 404 Handler for API =================
+app.all("/api/*", (req, res) => {
+  res.status(404).json({ error: "API route not found ❌" });
+});
+
+// ================= FRONTEND STATIC FILES =================
+app.use(express.static(path.join(__dirname, "../client/dist")));
+
+// Catch-all: send index.html for all frontend routes
+app.get("/*", (req, res) => {
+  res.sendFile(path.join(__dirname, "../client/dist/index.html"));
+});
 
 // ================= START SERVER =================
 const PORT = process.env.PORT || 5000;
