@@ -64,7 +64,7 @@ mongoose.set("strictQuery", true);
 mongoose.set("bufferCommands", false);
 
 mongoose
-  .connect(process.env.MONGO_URI)
+  .connect(process.env.MONGO_URL)
   .then(() => console.log("✅ MongoDB Connected"))
   .catch((err) => console.error("❌ MongoDB error:", err));
 
