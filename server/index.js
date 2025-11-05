@@ -190,11 +190,11 @@ app.all("/api/*", (req, res) => {
 });
 
 // ================= FRONTEND STATIC FILES =================
-app.use(express.static(path.join(__dirname, "../client/dist")));
+app.use(express.static(path.join(__dirname, "../Client/dist")));
 
 // Catch-all: send index.html for all frontend routes
 app.get("/*", (req, res) => {
-  res.sendFile(path.join(__dirname, "../client/dist/index.html"));
+  res.sendFile(path.join(__dirname, "../Client/dist/index.html"));
 });
 
 
