@@ -2,11 +2,10 @@
   "name": "server",
   "version": "1.0.0",
   "main": "index.js",
-   "scripts": {
+  "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node index.js",
-    "dev": "nodemon index.js",
-    "postinstall": "cd ../client && npm install && npm run build"
+    "dev": "nodemon index.js"
   },
   "keywords": [],
   "author": "",
