@@ -30,7 +30,10 @@ export default function Login() {
   const handleForgotPassword = async () => {
     if (!forgotEmail) return alert("Enter your email first!");
     try {
-      const response = await axios.post(`${import.meta.env.VITE_API_URL}/api/password/forgot`, { email: forgotEmail });
+      const response = await axios.post(
+  `${import.meta.env.VITE_API_URL}/api/password/forgot-password`,
+  { email: forgotEmail }
+);
       alert(response.data.message || "Password reset link sent to your email ✅");
       setShowForgot(false);
       setForgotEmail("");
