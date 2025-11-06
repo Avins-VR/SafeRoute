@@ -57,7 +57,7 @@ function ResetPassword() {
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
-            <label className="block text-left text-gray-300 text-sm font-medium mb-2">
+            <label className="block text-left text-gray-300 text-sm font-medium mb-3">
               New Password
             </label>
             <input
@@ -71,7 +71,7 @@ function ResetPassword() {
           </div>
 
           <div>
-            <label className="block text-left text-gray-300 text-sm font-medium mb-2">
+            <label className="block text-left text-gray-300 text-sm font-medium mb-3">
               Confirm Password
             </label>
             <input
@@ -111,7 +111,7 @@ function ResetPassword() {
       {/* Footer */}
       <footer className="mt-10 text-gray-400 text-xs sm:text-sm text-center opacity-80">
         © {new Date().getFullYear()}{" "}
-        <span className="text-indigo-400 font-semibold"> SafeRoute</span> — Secure
+        <span className="text-teal-500 font-semibold"> SafeRoute</span> — Secure
         Reset
       </footer>
     </section>
