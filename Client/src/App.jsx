@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { Routes, Route } from 'react-router-dom';
 import Home from './Home';
 import Login from './Login';
 import Signup from './Signup';
@@ -13,19 +13,17 @@ import './App.css';
 
 function App() {
   return (
-    <Router>
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/signup" element={<Signup />} />
-        <Route path="/sos" element={<Sos />} />
-        <Route path="/about" element={<About />} />
-        <Route path="/safezone" element={<Safezone />} />
-        <Route path="/tracking" element={<Tracking />} />
-        <Route path="/contact" element={<Contact />} />
-        <Route path="/reset-password/:token" element={<ResetPassword />} />
-      </Routes>
-    </Router>
+    <Routes>
+      <Route path="/" element={<Home />} />
+      <Route path="/login" element={<Login />} />
+      <Route path="/signup" element={<Signup />} />
+      <Route path="/sos" element={<Sos />} />
+      <Route path="/about" element={<About />} />
+      <Route path="/safezone" element={<Safezone />} />
+      <Route path="/tracking" element={<Tracking />} />
+      <Route path="/contact" element={<Contact />} />
+      <Route path="/reset-password/:token" element={<ResetPassword />} />
+    </Routes>
   );
 }
 
