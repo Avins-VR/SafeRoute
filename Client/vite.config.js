@@ -4,12 +4,12 @@ import path from 'path';
 
 export default defineConfig({
   plugins: [react()],
-  base: './', // ensures relative paths for assets
+  base: '/', // ✅ Serve assets from root, not relative paths
   build: {
-    outDir: 'dist', // output folder
-    assetsDir: 'assets', // folder for JS/CSS/images
+    outDir: 'dist',
+    assetsDir: 'assets',
     rollupOptions: {
-      input: path.resolve(__dirname, 'index.html'), // main entry
+      input: path.resolve(__dirname, 'index.html'),
     },
   },
   server: {
