@@ -12,6 +12,7 @@ const initializePassport = require("./model/passport");
 const User = require("./model/User");
 const safetyRoute = require("./routes/safetyRoute");
 const passwordRoutes = require("./routes/passwordRoutes");
+const clientPath = path.join(__dirname, "../Client/dist");
 
 const app = express();
 app.use(express.json());
@@ -184,17 +185,27 @@ app.all("/api/*", (req, res) => {
 });
 
 // ================= FRONTEND STATIC FILES =================
-// Serve static files correctly
-app.use(express.static(path.join(__dirname, "../Client/dist"), {
-  setHeaders: (res, path) => {
-    if (path.endsWith(".css")) res.setHeader("Content-Type", "text/css");
-    if (path.endsWith(".js")) res.setHeader("Content-Type", "application/javascript");
-  },
-}));
 
-// Catch-all handler for React Router paths
+// Serve assets with correct MIME type
+app.use(
+  "/assets",
+  express.static(path.join(clientPath, "assets"), {
+    setHeaders: (res, filePath) => {
+      if (filePath.endsWith(".css")) {
+        res.setHeader("Content-Type", "text/css");
+      } else if (filePath.endsWith(".js")) {
+        res.setHeader("Content-Type", "application/javascript");
+      }
+    },
+  })
+);
+
+// Serve other static files (index.html, icons, etc.)
+app.use(express.static(clientPath));
+
+// Catch-all to handle React Router routes (e.g., /reset-password/:token)
 app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "../Client/dist/index.html"));
+  res.sendFile(path.join(clientPath, "index.html"));
 });
 
 
