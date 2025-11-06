@@ -45,20 +45,19 @@ function ResetPassword() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col justify-center items-center bg-gradient-to-br from-indigo-600 via-blue-500 to-cyan-400 px-4 py-10 sm:px-6 lg:px-8">
-      {/* Main card */}
-      <div className="bg-white/95 backdrop-blur-sm shadow-2xl rounded-2xl w-full max-w-sm sm:max-w-md md:max-w-lg lg:max-w-md p-8 md:p-10 transition-all duration-300 hover:shadow-indigo-300">
-        <h2 className="text-3xl font-bold text-gray-800 text-center mb-3 sm:text-2xl">
+    <section className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-[#092635] via-[#0B192C] to-[#021526] px-4 py-12">
+      <div className="bg-gradient-to-br from-[#1E2A36] to-[#112030] border border-[#1f3b52] rounded-2xl shadow-2xl shadow-black/40 p-8 sm:p-10 w-full max-w-md backdrop-blur-sm transition-all duration-300 hover:shadow-[#0ff]/20">
+        <h2 className="text-3xl font-bold text-center bg-gradient-to-r from-indigo-400 to-teal-400 bg-clip-text text-transparent font-['Orbitron'] mb-4">
           Reset Your Password
         </h2>
-        <p className="text-gray-500 text-sm text-center mb-8">
-          Enter your new password below to secure your account.
+        <p className="text-gray-400 text-center text-sm sm:text-base mb-8">
+          Please enter your new password below to secure your account.
         </p>
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
-            <label className="block text-left text-gray-700 text-sm font-medium mb-1">
+            <label className="block text-left text-gray-300 text-sm font-medium mb-1">
               New Password
             </label>
             <input
@@ -66,13 +65,13 @@ function ResetPassword() {
               placeholder="Enter new password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none text-gray-800 placeholder-gray-400"
+              className="w-full px-4 py-2.5 bg-[#0B192C]/50 border border-[#1f3b52] text-gray-200 rounded-lg focus:ring-2 focus:ring-teal-400 focus:outline-none placeholder-gray-500"
               required
             />
           </div>
 
           <div>
-            <label className="block text-left text-gray-700 text-sm font-medium mb-1">
+            <label className="block text-left text-gray-300 text-sm font-medium mb-1">
               Confirm Password
             </label>
             <input
@@ -80,7 +79,7 @@ function ResetPassword() {
               placeholder="Re-enter new password"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
-              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none text-gray-800 placeholder-gray-400"
+              className="w-full px-4 py-2.5 bg-[#0B192C]/50 border border-[#1f3b52] text-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-400 focus:outline-none placeholder-gray-500"
               required
             />
           </div>
@@ -88,21 +87,20 @@ function ResetPassword() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg transition-all duration-200 disabled:opacity-60"
+            className="w-full py-3 bg-gradient-to-r from-indigo-500 to-teal-500 hover:from-indigo-400 hover:to-teal-400 text-white font-semibold rounded-lg transition-all duration-200 shadow-lg shadow-teal-700/30 disabled:opacity-60"
           >
             {loading ? "Processing..." : "Reset Password"}
           </button>
         </form>
 
-        {/* Message */}
         {message && (
           <p
-            className={`mt-5 text-center font-medium text-base ${
+            className={`mt-6 text-center font-medium text-base ${
               message.startsWith("✅")
-                ? "text-green-600"
+                ? "text-green-400"
                 : message.startsWith("⚠️")
-                ? "text-yellow-600"
-                : "text-red-600"
+                ? "text-yellow-400"
+                : "text-red-400"
             }`}
           >
             {message}
@@ -111,10 +109,12 @@ function ResetPassword() {
       </div>
 
       {/* Footer */}
-      <footer className="mt-10 text-white text-xs sm:text-sm text-center opacity-90">
-        © {new Date().getFullYear()} <b>SafeRoute</b> — Secure Reset
+      <footer className="mt-10 text-gray-400 text-xs sm:text-sm text-center opacity-80">
+        © {new Date().getFullYear()}{" "}
+        <span className="text-teal-400 font-semibold">SafeRoute</span> — Secure
+        Reset
       </footer>
-    </div>
+    </section>
   );
 }
 
