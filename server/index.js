@@ -24,21 +24,15 @@ const allowedOrigins = [
 
 app.use(
   cors({
-    origin: (origin, callback) => {
-      if (!origin || allowedOrigins.includes(origin)) callback(null, true);
-      else callback(new Error("Not allowed by CORS"));
-    },
+    origin: allowedOrigins,
     credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
 
-app.options("*", (req, res) => {
-  res.header("Access-Control-Allow-Origin", allowedOrigins[0]);
-  res.header("Access-Control-Allow-Credentials", "true");
-  res.header("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS");
-  res.header("Access-Control-Allow-Headers", "Content-Type,Authorization");
-  res.sendStatus(200);
-});
+// Preflight handler for all routes
+app.options("*", cors());
 
 // ================= SESSION =================
 app.set("trust proxy", 1); // trust first proxy for secure cookies
