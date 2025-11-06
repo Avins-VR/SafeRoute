@@ -57,7 +57,7 @@ function ResetPassword() {
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
-            <label className="block text-left text-gray-300 text-sm font-medium mb-1">
+            <label className="block text-left text-gray-300 text-sm font-medium mb-2">
               New Password
             </label>
             <input
@@ -65,13 +65,13 @@ function ResetPassword() {
               placeholder="Enter new password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-2.5 bg-[#0B192C]/50 border border-[#1f3b52] text-gray-200 rounded-lg focus:ring-2 focus:ring-teal-400 focus:outline-none placeholder-gray-500"
+              className="w-full px-4 py-2.5 bg-[#0B192C]/50 border border-[#1f3b52] text-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-400 focus:outline-none placeholder-gray-500"
               required
             />
           </div>
 
           <div>
-            <label className="block text-left text-gray-300 text-sm font-medium mb-1">
+            <label className="block text-left text-gray-300 text-sm font-medium mb-2">
               Confirm Password
             </label>
             <input
@@ -87,7 +87,7 @@ function ResetPassword() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-3 bg-gradient-to-r from-indigo-500 to-teal-500 hover:from-indigo-400 hover:to-teal-400 text-white font-semibold rounded-lg transition-all duration-200 shadow-lg shadow-teal-700/30 disabled:opacity-60"
+            className="w-full mt-5 py-3 bg-gradient-to-r from-indigo-500 to-teal-500 hover:from-indigo-400 hover:to-teal-400 text-white font-semibold rounded-lg transition-all duration-200 shadow-lg shadow-teal-700/30 disabled:opacity-60"
           >
             {loading ? "Processing..." : "Reset Password"}
           </button>
@@ -111,7 +111,7 @@ function ResetPassword() {
       {/* Footer */}
       <footer className="mt-10 text-gray-400 text-xs sm:text-sm text-center opacity-80">
         © {new Date().getFullYear()}{" "}
-        <span className="text-teal-400 font-semibold">SafeRoute</span> — Secure
+        <span className="text-indigo-400 font-semibold"> SafeRoute</span> — Secure
         Reset
       </footer>
     </section>
