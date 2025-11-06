@@ -184,10 +184,16 @@ app.all("/api/*", (req, res) => {
 });
 
 // ================= FRONTEND STATIC FILES =================
-app.use(express.static(path.join(__dirname, "../Client/dist")));
+// Serve static files correctly
+app.use(express.static(path.join(__dirname, "../Client/dist"), {
+  setHeaders: (res, path) => {
+    if (path.endsWith(".css")) res.setHeader("Content-Type", "text/css");
+    if (path.endsWith(".js")) res.setHeader("Content-Type", "application/javascript");
+  },
+}));
 
-// Catch-all: send index.html for all frontend routes
-app.get("/*", (req, res) => {
+// Catch-all handler for React Router paths
+app.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "../Client/dist/index.html"));
 });
 
